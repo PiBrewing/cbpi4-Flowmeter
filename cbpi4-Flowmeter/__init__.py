@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 try:
     import RPi.GPIO as GPIO
-    GPIO.setmode(GPIO.BCM)
 except Exception as e:
     print(e)
     pass
@@ -80,7 +79,7 @@ class FlowMeterData():
 
 
 @parameters([Property.Select(label="GPIO", options=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27],description="GPIO that is used by the Flowsensor"),
-            Property.Select(label="Display", options=["Total volume", "Flow, unit/s"],description=""),
+            Property.Select(label="Display", options=["Total volume", "Flow, unit/s"],description="Defines if total volume or volume flow is displayed"),
             Property.Number(label="Hertz", configurable=True, description="Here you can adjust the freequency for the flowmeter [Hertz, default is 7.5]. With this value you can calibrate the sensor.")])
 
 class FlowSensor(CBPiSensor):
@@ -91,19 +90,21 @@ class FlowSensor(CBPiSensor):
         self.fms = dict()
         self.gpio=self.props.get("GPIO",0)
         self.sensorShow=self.props.get("Display","Total Volume")
-        self.Hertz=self.props.get("Hertz", 7.5)
+        self.hertzProp=self.props.get("Hertz", 7.5)
 
         try:
+            GPIO.cleanup()
+            GPIO.setmode(GPIO.BCM)
             GPIO.setup(int(self.gpio),GPIO.IN, pull_up_down = GPIO.PUD_UP)
             GPIO.add_event_detect(int(self.gpio), GPIO.RISING, callback=self.doAClick, bouncetime=20)
             self.fms[int(self.gpio)] = FlowMeterData()
         except Exception as e:
             print(e)
 
-    @action(key="ResetSensor", parameters=[])
-    async def ResetSensor(self, **kwargs):
+    @action(key="Reset Sensor", parameters=[])
+    async def Reset(self, **kwargs):
         self.reset()
-        print("RESET FLOWSENSOR", kwargs)
+        print("RESET FLOWSENSOR")
   
 
     def get_unit(self):
