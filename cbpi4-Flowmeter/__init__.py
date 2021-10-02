@@ -8,13 +8,26 @@ import asyncio
 import random
 from cbpi.api import *
 import time
-from cbpi.api.config import ConfigType
 from cbpi.api.base import CBPiBase
+from cbpi.api import parameters, Property, action
+from cbpi.api.step import StepResult, CBPiStep
+from cbpi.api.timer import Timer
+from voluptuous.schema_builder import message
+from cbpi.api.dataclasses import NotificationAction, NotificationType
+from cbpi.api.dataclasses import Sensor, Kettle, Props
+import logging
+from socket import timeout
+from typing import KeysView
+from cbpi.api.config import ConfigType
 
 logger = logging.getLogger(__name__)
 
 try:
     import RPi.GPIO as GPIO
+    mode = GPIO.getmode()
+    if (mode == None):
+        GPIO.setmode(GPIO.BCM)
+
 except Exception as e:
     print(e)
     pass
@@ -93,9 +106,8 @@ class FlowSensor(CBPiSensor):
         self.hertzProp=self.props.get("Hertz", 7.5)
 
         try:
-            GPIO.cleanup()
-            GPIO.setmode(GPIO.BCM)
             GPIO.setup(int(self.gpio),GPIO.IN, pull_up_down = GPIO.PUD_UP)
+            GPIO.remove_event_detect(int(self.gpio))
             GPIO.add_event_detect(int(self.gpio), GPIO.RISING, callback=self.doAClick, bouncetime=20)
             self.fms[int(self.gpio)] = FlowMeterData()
         except Exception as e:
@@ -156,13 +168,82 @@ class FlowSensor(CBPiSensor):
         return flowConverted
 
     def reset(self):
+        logging.info("Reset Flowsensor")
         self.fms[int(self.gpio)].clear()
         return "Ok"
     
     def get_state(self):
         return dict(value=self.value)
 
+
+@parameters([Property.Number(label="Volume", description="Volume limit for this step", configurable=True),
+             Property.Actor(label="Actor",description="Actor to switch media flow on and off"),
+             Property.Sensor(label="Sensor"),
+             Property.Select(label="Reset", options=["Yes","No"],description="Reset Flowmeter when done")])
+
+class FlowStep(CBPiStep):
+
+    async def on_timer_done(self,timer):
+        self.summary = ""
+        self.cbpi.notify(self.name, 'Step finished. Transferred {} {}.'.format(round(self.current_volume,2),self.unit), NotificationType.SUCCESS) 
+        if self.resetsensor == "Yes":
+            self.sensor.instance.reset()
+
+        if self.actor is not None:
+            await self.actor_off(self.actor)
+        await self.next()
+
+    async def on_timer_update(self,timer, seconds):
+        await self.push_update()
+
+    async def on_start(self):
+        self.unit = self.cbpi.config.get("flowunit", "L")
+        self.actor = self.props.get("Actor", None)
+        self.target_volume = float(self.props.get("Volume",0))
+        self.flowsensor = self.props.get("Sensor",None)
+        self.sensor = self.get_sensor(self.flowsensor)
+        self.resetsensor = self.props.get("Reset","Yes")
+        self.sensor.instance.reset()
+        if self.timer is None:
+            self.timer = Timer(1,on_update=self.on_timer_update, on_done=self.on_timer_done)
+
+    async def on_stop(self):
+        if self.timer is not None:
+            await self.timer.stop()
+        self.summary = ""
+        if self.actor is not None:
+            await self.actor_off(self.actor)
+        await self.push_update()
+
+    async def reset(self):
+        self.timer = Timer(1,on_update=self.on_timer_update, on_done=self.on_timer_done)
+        if self.actor is not None:
+            await self.actor_off(self.actor)
+        if self.resetsensor == "Yes":
+            self.sensor.instance.reset()
+
+
+    async def run(self):
+        if self.actor is not None:
+            await self.actor_on(self.actor)
+        self.summary=""
+        await self.push_update()
+        while self.running == True:
+            self.current_volume = self.get_sensor_value(self.flowsensor).get("value")
+            self.summary="Volume: {}".format(self.current_volume)
+            await self.push_update()
+
+            if self.current_volume >= self.target_volume and self.timer.is_running is not True:
+                self.timer.start()
+                self.timer.is_running = True
+
+            await asyncio.sleep(0.2)
+
+        return StepResult.DONE
+
+
 def setup(cbpi):
+    cbpi.plugin.register("FlowStep", FlowStep)
     cbpi.plugin.register("FlowSensor", FlowSensor)
     cbpi.plugin.register("Flowmeter_Config", Flowmeter_Config)
     pass
