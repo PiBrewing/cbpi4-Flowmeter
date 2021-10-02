@@ -28,14 +28,14 @@ Yellow -> 10k ohm resistor -> GPIO pin. (or data on the extension board. No extr
 ![Flowsensor Settings](https://github.com/avollkopf/cbpi4-Flowmeter/blob/main/SensorConfig.png?raw=true)
 
 
-    - Once configured, you need to add the sensor to the Dashboard.
-    - Please select Yes for Action as this will add an additional menu on the right side of the sensor to reset the sensor to 0
+- Once configured, you need to add the sensor to the Dashboard.
+- Please select Yes for Action as this will add an additional menu on the right side of the sensor to reset the sensor to 0
 
 ![Flowsensor Action Setting](https://github.com/avollkopf/cbpi4-Flowmeter/blob/main/SensorActionSetting.png?raw=true)
 ![Flowsensor Action Button](https://github.com/avollkopf/cbpi4-Flowmeter/blob/main/SensorActionButton.png?raw=true)
 
     
-    - When you press the menu button on the right side of the sensor, a menu wil show up where you can reset the sensor.
+- When you press the menu button on the right side of the sensor, a menu wil show up where you can reset the sensor.
 
 ![Flowsensor Action Menu](https://github.com/avollkopf/cbpi4-Flowmeter/blob/main/SensorAction.png?raw=true)
 
