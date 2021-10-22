@@ -13,7 +13,7 @@ Yellow -> 10k ohm resistor -> GPIO pin. (or data on the extension board. No extr
 - Installation: 
     - sudo pip3 install cbpi4-Flowmeter
     --> or install from Repo
-    - sudo pip3 install https://github.com/avollkopf/cbpi4-Flowmeter 
+    - sudo pip3 install https://github.com/avollkopf/cbpi4-Flowmeter/archive/main.zip
 
     - cbpi add cbpi4-Flowmeter
 
