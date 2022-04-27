@@ -133,7 +133,8 @@ class MQTTFlowSensor(CBPiSensor):
     
     async def reset(self):
         logging.info("Reset MQTTFlowsensor")
-        await self.cbpi.satellite.publish(self.ResetTopic, "", True)
+        logging.info(self.ResetTopic)
+        await self.cbpi.satellite.publish(self.ResetTopic, json.dumps({}), True)
         return "Ok"
 
     def get_state(self):
