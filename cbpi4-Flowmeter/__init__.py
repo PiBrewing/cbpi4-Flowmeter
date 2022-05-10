@@ -19,6 +19,7 @@ import logging
 from socket import timeout
 from typing import KeysView
 from cbpi.api.config import ConfigType
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,62 @@ class FlowMeterData():
         self.pour = 0
         return str(self.pour)
 
+
+@parameters([Property.Text(label="Topic", configurable=True, description="MQTT FlowSensor Topic"),
+             Property.Text(label="PayloadDictionary", configurable=True, default_value="",
+                           description="Where to find msg in payload, leave blank for raw payload"),
+             Property.Text(label="ResetTopic", configurable=True, description="MQTT FlowSensor Reset Topic")])
+class MQTTFlowSensor(CBPiSensor):
+
+    def __init__(self, cbpi, id, props):
+        super(MQTTFlowSensor, self).__init__(cbpi, id, props)
+        self.Topic = self.props.get("Topic", None)
+        self.payload_text = self.props.get("PayloadDictionary", None)
+        if self.payload_text != None:
+            self.payload_text = self.payload_text.split('.')
+        self.mqtt_task = self.cbpi.satellite.subcribe(self.Topic, self.on_message)
+        self.value: float = 999
+        self.ResetTopic = self.props.get("ResetTopic", None)        
+    
+    @action(key="Reset Sensor", parameters=[])
+    async def Reset(self, **kwargs):
+        await self.reset()
+        print("RESET FLOWSENSOR")
+
+    async def on_message(self, message):
+        val = json.loads(message)
+        try:
+            if self.payload_text is not None:
+                for key in self.payload_text:
+                    val = val.get(key, None)
+
+            if isinstance(val, (int, float, str)):
+                self.value = float(val)
+                self.log_data(self.value)
+                self.push_update(self.value)
+        except Exception as e:
+            logging.info("MQTT Sensor Error {}".format(e))
+
+    async def run(self):
+        while self.running:
+            await asyncio.sleep(1)
+    
+    async def reset(self):
+        logging.info("Reset MQTTFlowsensor")
+        logging.info(self.ResetTopic)
+        await self.cbpi.satellite.publish(self.ResetTopic, json.dumps({}), True)
+        return "Ok"
+
+    def get_state(self):
+        return dict(value=self.value)
+
+    async def on_stop(self):
+        if self.mqtt_task.done() is False:
+            self.mqtt_task.cancel()
+            try:
+                await self.mqtt_task
+            except asyncio.CancelledError:
+                pass
 
 @parameters([Property.Select(label="GPIO", options=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27],description="GPIO that is used by the Flowsensor"),
             Property.Select(label="Display", options=["Total volume", "Flow, unit/s"],description="Defines if total volume or volume flow is displayed"),
@@ -201,8 +258,11 @@ class FlowStep(CBPiStep):
         self.actor = self.props.get("Actor", None)
         self.target_volume = float(self.props.get("Volume",0))
         self.flowsensor = self.props.get("Sensor",None)
+        logging.info(self.flowsensor)
         self.sensor = self.get_sensor(self.flowsensor)
+        logging.info(self.sensor)
         self.resetsensor = self.props.get("Reset","Yes")
+
         self.sensor.instance.reset()
         if self.timer is None:
             self.timer = Timer(1,on_update=self.on_timer_update, on_done=self.on_timer_done)
@@ -246,4 +306,6 @@ def setup(cbpi):
     cbpi.plugin.register("FlowStep", FlowStep)
     cbpi.plugin.register("FlowSensor", FlowSensor)
     cbpi.plugin.register("Flowmeter_Config", Flowmeter_Config)
+    if str(cbpi.static_config.get("mqtt", False)).lower() == "true":
+        cbpi.plugin.register("MQTTFLowSensor", MQTTFlowSensor)
     pass
