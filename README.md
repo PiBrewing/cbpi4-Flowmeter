@@ -55,4 +55,4 @@ Yellow -> 10k ohm resistor -> GPIO pin. (or data on the extension board. No extr
 - 10.05.22: (0.0.3) removed cbpi dependency
 - 27.04.22: (0.0.2) Added MQTT based flowsensor with reset topic
 - 02.10.21: (0.0.1) Initial Release
->>>>>>> f0481603ed8d1fd4571dc5b48b4112703bc5465e
+
