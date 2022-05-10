@@ -50,6 +50,7 @@ Yellow -> 10k ohm resistor -> GPIO pin. (or data on the extension board. No extr
 ![Flowstep](https://github.com/avollkopf/cbpi4-Flowmeter/blob/main/FlowStep.png?raw=true)
 
 
-- Changelog:
+### Changelog:
 
-	- 02.10.21: Initial Release
+- 10.05.22: removed cbpi dependency
+- 02.10.21: Initial Release
