@@ -15,8 +15,6 @@ Yellow -> 10k ohm resistor -> GPIO pin. (or data on the extension board. No extr
     --> or install from Repo
     - sudo pip3 install https://github.com/avollkopf/cbpi4-Flowmeter/archive/main.zip
 
-    - cbpi add cbpi4-Flowmeter
-
 - Sensor Usage:
     - On the settings page, choose a unit for the Volume (e.g. L, qt, gal, ...)
     - Add Sensor under Hardware and choose Flowmeter as Type
@@ -52,6 +50,7 @@ Yellow -> 10k ohm resistor -> GPIO pin. (or data on the extension board. No extr
 
 ## Changelog:
 
+- 11.05.22: (0.0.4) Updated README (removed cbpi add)
 - 10.05.22: (0.0.3) removed cbpi dependency
 - 27.04.22: (0.0.2) Added MQTT based flowsensor with reset topic
 - 02.10.21: (0.0.1) Initial Release
