@@ -50,6 +50,7 @@ Yellow -> 10k ohm resistor -> GPIO pin. (or data on the extension board. No extr
 
 ## Changelog:
 
+- 08.04.23: (0.0.5.a1) added test support for plugin settings selection branch
 - 11.05.22: (0.0.4) Updated README (removed cbpi add)
 - 10.05.22: (0.0.3) removed cbpi dependency
 - 27.04.22: (0.0.2) Added MQTT based flowsensor with reset topic

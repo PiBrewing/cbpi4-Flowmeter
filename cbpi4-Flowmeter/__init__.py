@@ -40,17 +40,47 @@ class Flowmeter_Config(CBPiExtension):
         self._task = asyncio.create_task(self.init_sensor())
 
     async def init_sensor(self):
+        plugin = await self.cbpi.plugin.load_plugin_list("cbpi4-Flowmeter")
+        self.version=plugin[0].get("Version","0.0.0")
+        self.name=plugin[0].get("Name","cbpi4-Flowmeter")
+
+        self.flowmeter_update = self.cbpi.config.get(self.name+"_update", None)
+
         unit = self.cbpi.config.get("flowunit", None)
         if unit is None:
             logging.info("INIT FLOW SENSOR CONFIG")
             try:
-                await self.cbpi.config.add("flowunit", "L", ConfigType.SELECT, "Flowmeter unit", [{"label": "L", "value": "L"},
+                await self.cbpi.config.add("flowunit", "L", type=ConfigType.SELECT, description="Flowmeter unit", 
+                                                                                    options=[{"label": "L", "value": "L"},
                                                                                             {"label": "gal(us)", "value": "gal(us)"},
                                                                                             {"label": "gal(uk)", "value": "gal(uk)"},
-                                                                                            {"label": "qt", "value": "qt"}])
-            except:
-                logging.info("Flowmeter Error, Unable to update database.")
+                                                                                            {"label": "qt", "value": "qt"}],
+                                                                                            source=self.name)
+            except Exception as e:
+                    logger.warning('Unable to update config')
+                    logger.warning(e)
+        else:
+            if self.flowmeter_update == None or self.flowmeter_update != self.version:
+                try:
+                    await self.cbpi.config.add("flowunit", unit , type=ConfigType.SELECT, description="Flowmeter unit", 
+                                                                                    options=[{"label": "L", "value": "L"},
+                                                                                            {"label": "gal(us)", "value": "gal(us)"},
+                                                                                            {"label": "gal(uk)", "value": "gal(uk)"},
+                                                                                            {"label": "qt", "value": "qt"}],
+                                                                                            source=self.name)
+                except Exception as e:
+                    logger.warning('Unable to update config')
+                    logger.warning(e)
 
+        if self.flowmeter_update == None or self.flowmeter_update != self.version:
+            try:
+                await self.cbpi.config.add(self.name+"_update", self.version, type=ConfigType.STRING,
+                                           description="Flowmeter Plugin Version",
+                                           source='hidden')
+            except Exception as e:
+                logger.warning('Unable to update config')
+                logger.warning(e)
+            pass         
 
 
 class FlowMeterData():
