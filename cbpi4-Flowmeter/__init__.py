@@ -51,11 +51,12 @@ class Flowmeter_Config(CBPiExtension):
             logging.info("INIT FLOW SENSOR CONFIG")
             try:
                 await self.cbpi.config.add("flowunit", "L", type=ConfigType.SELECT, description="Flowmeter unit", 
+                                                                                    source=self.name,
                                                                                     options=[{"label": "L", "value": "L"},
                                                                                             {"label": "gal(us)", "value": "gal(us)"},
                                                                                             {"label": "gal(uk)", "value": "gal(uk)"},
-                                                                                            {"label": "qt", "value": "qt"}],
-                                                                                            source=self.name)
+                                                                                            {"label": "qt", "value": "qt"}])
+                                                                                            
             except Exception as e:
                     logger.warning('Unable to update config')
                     logger.warning(e)
@@ -63,11 +64,12 @@ class Flowmeter_Config(CBPiExtension):
             if self.flowmeter_update == None or self.flowmeter_update != self.version:
                 try:
                     await self.cbpi.config.add("flowunit", unit , type=ConfigType.SELECT, description="Flowmeter unit", 
+                                                                                    source=self.name,
                                                                                     options=[{"label": "L", "value": "L"},
                                                                                             {"label": "gal(us)", "value": "gal(us)"},
                                                                                             {"label": "gal(uk)", "value": "gal(uk)"},
-                                                                                            {"label": "qt", "value": "qt"}],
-                                                                                            source=self.name)
+                                                                                            {"label": "qt", "value": "qt"}])
+                                                                                            
                 except Exception as e:
                     logger.warning('Unable to update config')
                     logger.warning(e)
