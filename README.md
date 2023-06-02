@@ -66,7 +66,7 @@ Actions:
 
 
 ## Changelog:
-- 14.05.23: (0.0.6) added simple VolumeSensor
+- 14.05.23: (0.0.6.rc1) added simple VolumeSensor and cbpi4 requirement
 - 14.04.23: (0.0.5.a2) fixed bug in parameter generation
 - 08.04.23: (0.0.5.a1) added test support for plugin settings selection branch
 - 11.05.22: (0.0.4) Updated README (removed cbpi add)
