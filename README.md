@@ -1,5 +1,7 @@
 # CraftBeerPi4 FLowmeter Sensor / Step Plugin
 
+*For recently added VolumeSensor functionality scroll down*
+
 This plugin has been ported from the craftbeerpi3 plugin version (https://github.com/nanab/Flowmeter)
 
 The plugin includes sensor with action to reset the sensor and a custom step.
@@ -11,9 +13,9 @@ Black -> GND.
 Yellow -> 10k ohm resistor -> GPIO pin. (or data on the extension board. No extra resistor required here)
 
 - Installation: 
-    - sudo pip3 install cbpi4-Flowmeter
-    --> or install from Repo
-    - sudo pip3 install https://github.com/avollkopf/cbpi4-Flowmeter/archive/main.zip
+    - pypi release: sudo pip3 install cbpi4-Flowmeter
+    - PiBrewing release: sudo pip3 install https://github.com/avollkopf/cbpi4-Flowmeter/archive/main.zip
+	- prash3r VolumeSensor testing branch: sudo pip3 install https://github.com/prash3r/cbpi4-Flowmeter/archive/VolumeSensor.zip
 
 - Sensor Usage:
     - On the settings page, choose a unit for the Volume (e.g. L, qt, gal, ...)
@@ -47,9 +49,24 @@ Yellow -> 10k ohm resistor -> GPIO pin. (or data on the extension board. No extr
 
 ![Flowstep](https://github.com/avollkopf/cbpi4-Flowmeter/blob/main/FlowStep.png?raw=true)
 
+## VolumeSensor functionality
+
+The recently added *very simple* VolumeSensor functionality can be used like this:
+
+Parameters:
+ - GPIO: The GPIO Pin number in BCM numbering
+ - impulsesPerVolumeUnit: the amount of impulses that should be displaying the volume of 1 of whatever Unit. This is unit agnostic. Just use the same unit in your FlowStep if you use it.
+
+The VolumeSensor does nothing more then to count impulses and calculate the volume the number of impulses represent.
+
+Actions:
+ - Reset Sensor: resets the countet impulses and volume to 0
+ - Fake Impulse: fakes the detection of an impulse (i used this for testing because i dont have a flow sensor)
+
+
 
 ## Changelog:
-
+- 14.05.23: (0.0.6) added simple VolumeSensor
 - 14.04.23: (0.0.5.a2) fixed bug in parameter generation
 - 08.04.23: (0.0.5.a1) added test support for plugin settings selection branch
 - 11.05.22: (0.0.4) Updated README (removed cbpi add)

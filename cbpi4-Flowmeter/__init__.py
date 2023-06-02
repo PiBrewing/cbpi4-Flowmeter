@@ -264,6 +264,62 @@ class FlowSensor(CBPiSensor):
     def get_state(self):
         return dict(value=self.value)
 
+##########
+
+@parameters([Property.Select(label="GPIO", options=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27],description="GPIO that is used by the Flowsensor"),
+            Property.Number(label="impulsesPerVolumeUnit", configurable=True, description="Here you need to configure how many impulses per Unit of measurement the sensor is sending. ")])
+
+class VolumeSensor(CBPiSensor):
+    
+    def __init__(self, cbpi, id, props):
+        super(VolumeSensor, self).__init__(cbpi, id, props)
+        self.value = 0
+        self.impulses = 0
+        self.liter = 0
+        self.gpio = self.props.get("GPIO",0)
+        self.IperL = self.props.get("impulsesPerVolumeUnit", 450)
+        self.LperI = float(1.0) / float(self.IperL)
+
+        try:
+            GPIO.setup(int(self.gpio),GPIO.IN, pull_up_down = GPIO.PUD_UP)
+            GPIO.remove_event_detect(int(self.gpio))
+            GPIO.add_event_detect(int(self.gpio), GPIO.RISING, callback=self.impulseDetected, bouncetime=20)
+        except Exception as e:
+            print(e)
+
+    @action(key="Reset Sensor", parameters=[])
+    async def Reset(self, **kwargs):
+        self.reset()
+
+    @action(key="Fake Impulse", parameters=[])
+    async def fakeImpulse(self, **kwargs):
+        self.impulseDetected("fake")
+
+    def impulseDetected(self, channel):
+        logging.debug("impulse detected on")
+        self.impulses = self.impulses + 1
+        self.liter = round(self.LperI * self.impulses,3)
+        self.value = self.liter
+
+    async def run(self):
+        while self.running is True:
+            self.log_data(self.value)
+            self.push_update(self.value)
+            await asyncio.sleep(1)
+
+    def reset(self):
+        logging.info(f'reset VolumeSensor from {self.liter} to 0.')
+        self.impulses = 0
+        self.liter = 0
+        self.value = 0
+        self.push_update(self.value)        
+        return "Ok"
+    
+    def get_state(self):
+        return dict(value=self.value)
+
+###########################################
+
 
 @parameters([Property.Number(label="Volume", description="Volume limit for this step", configurable=True),
              Property.Actor(label="Actor",description="Actor to switch media flow on and off"),
@@ -336,6 +392,7 @@ class FlowStep(CBPiStep):
 
 def setup(cbpi):
     cbpi.plugin.register("FlowStep", FlowStep)
+    cbpi.plugin.register("VolumeSensor", VolumeSensor)
     cbpi.plugin.register("FlowSensor", FlowSensor)
     cbpi.plugin.register("Flowmeter_Config", Flowmeter_Config)
     if str(cbpi.static_config.get("mqtt", False)).lower() == "true":
