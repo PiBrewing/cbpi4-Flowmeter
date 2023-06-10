@@ -7,7 +7,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='cbpi4-Flowmeter',
-      version='0.0.6.rc1',
+      version='0.0.6',
       description='CraftBeerPi4 Flowsensor / Step Plugin ',
       author='Alexander Vollkopf',
       author_email='avollkopf@web.de',
